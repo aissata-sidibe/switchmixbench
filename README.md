@@ -68,15 +68,16 @@ switchmixbench/
 ├── pyproject.toml
 └── README.md
 ---
+## Results (baseline)
 
-## Citation
-**If you use this benchmark, please cite:**
+We report accuracy on NLI under two conditions:
 
-@misc{switchmixbench2026,
-  title={SwitchMixBench: A Robustness Benchmark for Multilingual Foundation Models under Code-Switching},
-  author={Aissata Sidibe},
-  year={2026},
-  url={https://github.com/aissata-sidibe/switchmixbench}
-}
+- **clean**: original English NLI inputs
+- **switchmix**: code-switched + noisy variant (SwitchMix)
 
----
+| Model | Task | Metric | Clean | SwitchMix | Robustness Drop |
+|------|------|--------|------:|----------:|----------------:|
+| google/flan-t5-small | NLI | Accuracy | 0.191 | 0.030 | 0.161 |
+
+**Observation:** The model suffers a large degradation under code-switching, highlighting brittleness of multilingual foundation models under realistic mixed-language inputs.
+
