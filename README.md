@@ -1,83 +1,156 @@
 # SwitchMixBench
-**A robustness benchmark for multilingual foundation models under code-switching and informal language (FR↔EN)**
 
-SwitchMixBench is an open-source benchmark designed to evaluate how multilingual **Large Language Models (LLMs)** and other **foundation models** behave under realistic distribution shifts such as **code-switching** and informal writing. The benchmark pairs clean inputs with perturbed variants and reports robustness gaps across tasks.
+SwitchMixBench is a lightweight research benchmark for evaluating the robustness of multilingual foundation models under code-switching, informal language, and noisy text.
 
-This repository provides:
-- a small benchmark dataset (v0.1 prototype)
-- a reproducible evaluation harness
-- baseline + foundation model evaluation scripts
-- robustness reporting utilities
+Rather than optimizing for leaderboard performance, the benchmark is designed to measure brittleness: how quickly performance collapses when inputs shift from clean text to realistic mixed-language user text.
 
 ---
 
 ## Motivation
-Multilingual evaluations often assume clean monolingual text. In practice, users frequently mix languages (e.g., French↔English), write informally, and include borrowed expressions. These phenomena can cause silent failures in reasoning, entailment judgments, and answer extraction.
 
-SwitchMixBench focuses on *controlled perturbations* to quantify robustness and support failure-mode analysis.
+Most multilingual evaluation benchmarks assume:
+- clean, well-formed sentences
+- a single language per example
+- formal register
 
----
+In practice, real-world user text often contains:
+- code-switching
+- informal spellings and abbreviations
+- mixed scripts, borrowed words, and transliteration
+- noisy punctuation and grammar
 
-## Research Question
-**How robust are multilingual foundation models to realistic code-switching and informal language compared to clean monolingual inputs?**
-
-### Hypothesis (v0.1)
-Performance on clean text will not reliably predict performance under code-switching + informality, and failure modes will vary by task (NLI vs QA).
-
----
-
-## Tasks (v0.1)
-SwitchMixBench currently includes:
-
-### 1) Natural Language Inference (NLI)
-- Labels: `entailment`, `contradiction`, `neutral`
-- Metric: **Accuracy**
-
-### 2) Question Answering (QA)
-- Short-answer QA from a context + question prompt
-- Metric: **Token-level F1** (SQuAD-style)
+SwitchMixBench provides a reproducible way to quantify this gap.
 
 ---
 
-## Benchmark Variants
-Each example is paired across two input conditions:
+## Tasks
 
-- `clean`: monolingual French prompt
-- `switchmix`: code-switched prompt (FR↔EN span insertion) + informal noise injection
+Current tasks included:
 
-This enables direct measurement of robustness drop under controlled shift.
+- NLI (Natural Language Inference)  
+  Given a premise and hypothesis, predict one label: entailment, neutral, or contradiction.
+
+Additional tasks (QA / sentiment / safety) can be added using the same benchmark format.
 
 ---
 
-## Repository Structure
-```text
-switchmixbench/
-├── data/
-│   └── dataset_card.md
-├── scripts/
-│   ├── prepare_data.py
-│   ├── run_baselines.py
-│   ├── robustness_report.py
-│   └── make_report.py
-├── switchmixbench/
-│   ├── generate/
-│   ├── tasks/
-│   ├── eval/
-│   └── utils/
-├── requirements.txt
-├── pyproject.toml
-└── README.md
+## Data format
+
+Each example includes:
+- id: unique identifier
+- task: task name (nli, qa, ...)
+- split: train or test
+- variant: clean or switchmix
+- input / prompt: model input text
+- label: ground truth label
+
+The benchmark is structured so that clean vs switchmix examples share the same underlying meaning, but differ in surface form.
+
 ---
-## Results (baseline)
 
-We report accuracy on NLI under two conditions:
+## Installation (Windows PowerShell)
 
-- **clean**: original English NLI inputs
-- **switchmix**: code-switched + noisy variant (SwitchMix)
+Create a virtual environment:
 
-| Model | Task | Metric | Clean | SwitchMix | Robustness Drop |
-|------|------|--------|------:|----------:|----------------:|
-| google/flan-t5-small | NLI | Accuracy | 0.191 | 0.030 | 0.161 |
+    python -m venv .venv
+    .venv\Scripts\Activate.ps1
 
-**Observation:** The model suffers a large degradation under code-switching, highlighting brittleness of multilingual foundation models under realistic mixed-language inputs.
+Install dependencies:
+
+    pip install -r requirements.txt
+
+---
+
+## Quickstart
+
+Prepare processed benchmark JSON:
+
+    python scripts/prepare_data.py
+
+This generates:
+
+    data/processed/switchmixbench.json
+
+Run evaluation (NLI baseline):
+
+    python switchmixbench/eval/run_eval.py --model google/flan-t5-small --task nli --split test
+
+This writes:
+
+    results/tables/nli_test_google_flan-t5-small.csv
+
+---
+
+## Metrics
+
+- NLI: Accuracy  
+- QA: Token-level F1 (when enabled)
+
+---
+
+## Baseline results
+
+We report performance under two conditions:
+- clean: original inputs
+- switchmix: code-switched + noisy variant
+
+Model: google/flan-t5-small  
+Task: NLI  
+Metric: Accuracy  
+
+Clean accuracy: 0.191  
+SwitchMix accuracy: 0.030  
+Robustness drop: 0.161  
+
+Interpretation: the model exhibits a large degradation under code-switching noise, highlighting brittleness of multilingual foundation models under realistic mixed-language inputs.
+
+---
+
+## Robustness summary
+
+Generate the robustness summary table:
+
+    python scripts/robustness_report.py
+    python -c "import pandas as pd; print(pd.read_csv('results/tables/robustness_summary.csv').to_string(index=False))"
+
+Output:
+
+    results/tables/robustness_summary.csv
+
+---
+
+## Reproducibility
+
+- Raw datasets are not committed to the repo (data/raw/ is ignored).
+- Results tables are generated by scripts and stored under results/tables/.
+- Evaluation uses Hugging Face transformers for model loading and inference.
+
+---
+
+## Roadmap
+
+Planned research extensions:
+- add more multilingual foundation models (instruction-tuned + causal LMs)
+- add more tasks (QA, sentiment, toxicity / safety)
+- add controlled perturbations (typos, transliteration, slang)
+- expand beyond French/English into West African languages (e.g., Bambara)
+
+---
+
+## Citation
+
+If you use this benchmark, please cite:
+
+    @misc{switchmixbench2026,
+      title={SwitchMixBench: A Robustness Benchmark for Multilingual Foundation Models under Code-Switching},
+      author={Aissata Sidibe},
+      year={2026},
+      url={https://github.com/aissata-sidibe/switchmixbench}
+    }
+
+---
+
+## License
+
+MIT License
 
