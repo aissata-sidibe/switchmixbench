@@ -1,40 +1,81 @@
-# SwitchMixBench (v0.1)
-**Code-switching robustness benchmark for multilingual foundation models (FR/EN)**
+# SwitchMixBench
+**A robustness benchmark for multilingual foundation models under code-switching and informal language (FR↔EN)**
 
-SwitchMixBench is a lightweight benchmark designed to measure how multilingual foundation models degrade under:
-- **code-switching** (French ↔ English)
-- **informal language**
-- mild **distribution shift** in prompt phrasing
+SwitchMixBench is an open-source benchmark designed to evaluate how multilingual **Large Language Models (LLMs)** and other **foundation models** behave under realistic distribution shifts such as **code-switching** and informal writing. The benchmark pairs clean inputs with perturbed variants and reports robustness gaps across tasks.
 
-The goal is to support reproducible robustness evaluation and failure-mode analysis for multilingual NLP.
+This repository provides:
+- a small benchmark dataset (v0.1 prototype)
+- a reproducible evaluation harness
+- baseline + foundation model evaluation scripts
+- robustness reporting utilities
 
 ---
 
-## Research question
-**How robust are multilingual foundation models to realistic code-switching and informal language, compared to clean monolingual inputs?**
+## Motivation
+Multilingual evaluations often assume clean monolingual text. In practice, users frequently mix languages (e.g., French↔English), write informally, and include borrowed expressions. These phenomena can cause silent failures in reasoning, entailment judgments, and answer extraction.
+
+SwitchMixBench focuses on *controlled perturbations* to quantify robustness and support failure-mode analysis.
+
+---
+
+## Research Question
+**How robust are multilingual foundation models to realistic code-switching and informal language compared to clean monolingual inputs?**
+
+### Hypothesis (v0.1)
+Performance on clean text will not reliably predict performance under code-switching + informality, and failure modes will vary by task (NLI vs QA).
 
 ---
 
 ## Tasks (v0.1)
-- **NLI**: entailment / contradiction / neutral  
-- **QA**: short-answer question answering
+SwitchMixBench currently includes:
 
-Each example has two variants:
-- `clean` (monolingual French)
-- `switchmix` (French + English span insertion + informal noise)
+### 1) Natural Language Inference (NLI)
+- Labels: `entailment`, `contradiction`, `neutral`
+- Metric: **Accuracy**
+
+### 2) Question Answering (QA)
+- Short-answer QA from a context + question prompt
+- Metric: **Token-level F1** (SQuAD-style)
 
 ---
 
-## Quickstart (Windows / CPU)
-### 1) Install
-```bash
-pip install -r requirements.txt
-pip install -e .
+## Benchmark Variants
+Each example is paired across two input conditions:
 
+- `clean`: monolingual French prompt
+- `switchmix`: code-switched prompt (FR↔EN span insertion) + informal noise injection
+
+This enables direct measurement of robustness drop under controlled shift.
+
+---
+
+## Repository Structure
+```text
+switchmixbench/
+├── data/
+│   └── dataset_card.md
+├── scripts/
+│   ├── prepare_data.py
+│   ├── run_baselines.py
+│   ├── robustness_report.py
+│   └── make_report.py
+├── switchmixbench/
+│   ├── generate/
+│   ├── tasks/
+│   ├── eval/
+│   └── utils/
+├── requirements.txt
+├── pyproject.toml
+└── README.md
+---
+
+## Citation
+If you use this benchmark, please cite:
+
+```bibtex
 @misc{switchmixbench2026,
-  title={SwitchMixBench: Code-switching Robustness Benchmark for Multilingual Foundation Models},
+  title={SwitchMixBench: A Robustness Benchmark for Multilingual Foundation Models under Code-Switching},
   author={Aissata Sidibe},
   year={2026},
   url={https://github.com/aissata-sidibe/switchmixbench}
 }
-
