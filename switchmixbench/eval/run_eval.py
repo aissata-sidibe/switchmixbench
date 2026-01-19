@@ -11,24 +11,28 @@ from switchmixbench.utils.io import read_json
 
 
 def parse_nli_label(text: str) -> str:
-    """
-    Extract one of: entailment / neutral / contradiction from model output.
-    This prevents 0% accuracy due to formatting like:
-    'The answer is entailment.' or 'Entailment (because ...)'
-    """
     t = str(text).lower().strip()
     t = t.replace(".", " ").replace(",", " ").replace(":", " ")
     t = " ".join(t.split())
 
+    # normalize common variants
+    if "entails" in t or "entailed" in t:
+        return "entailment"
+    if "contradicts" in t or "contradicted" in t:
+        return "contradiction"
+
+    # direct labels
     for lab in ["entailment", "neutral", "contradiction"]:
         if t == lab:
             return lab
 
+    # label appears inside text
     for lab in ["entailment", "neutral", "contradiction"]:
         if lab in t:
             return lab
 
     return ""
+
 
 
 def load_model(model_name: str):
