@@ -1,71 +1,73 @@
 import os
 import pandas as pd
 
-def normalize(x):
-    return str(x).strip().lower()
 
-def score_nli(df):
-    # accuracy
-    correct = 0
-    for _, r in df.iterrows():
-        if normalize(r["prediction"]) == normalize(r["label"]):
-            correct += 1
-    return correct / max(1, len(df))
+def parse_nli_label(text: str) -> str:
+    t = str(text).lower().strip()
+    t = t.replace(".", " ").replace(",", " ").replace(":", " ")
+    t = " ".join(t.split())
 
-def score_qa(df):
-    # exact match
+    for lab in ["entailment", "neutral", "contradiction"]:
+        if t == lab:
+            return lab
+
+    for lab in ["entailment", "neutral", "contradiction"]:
+        if lab in t:
+            return lab
+
+    return ""
+
+
+def score_nli_accuracy(df: pd.DataFrame) -> float:
+    preds = [parse_nli_label(x) for x in df["prediction"].astype(str).tolist()]
+    labels = df["label"].astype(str).tolist()
+
     correct = 0
-    for _, r in df.iterrows():
-        if normalize(r["prediction"]) == normalize(r["label"]):
+    for p, y in zip(preds, labels):
+        if p == y:
             correct += 1
-    return correct / max(1, len(df))
+
+    return correct / max(1, len(labels))
+
 
 def main():
     os.makedirs("results/tables", exist_ok=True)
 
-    files = [
-        "results/tables/nli_test_google_flan-t5-small.csv",
-        "results/tables/qa_test_google_flan-t5-small.csv",
-    ]
+    # We only summarize NLI for now (QA v0.2 will come next)
+    path = "results/tables/nli_test_google_flan-t5-small.csv"
+    if not os.path.exists(path):
+        print("missing:", path)
+        return
 
-    rows = []
+    df = pd.read_csv(path)
 
-    for path in files:
-        if not os.path.exists(path):
-            print("missing:", path)
-            continue
+    df_clean = df[df["variant"] == "clean"]
+    df_mix = df[df["variant"] == "switchmix"]
 
-        df = pd.read_csv(path)
+    clean_score = score_nli_accuracy(df_clean)
+    mix_score = score_nli_accuracy(df_mix)
 
-        task = df["task"].iloc[0]
-        model = df["model"].iloc[0]
+    out = pd.DataFrame(
+        [
+            {
+                "task": "nli",
+                "model": df["model"].iloc[0],
+                "metric": "accuracy",
+                "clean_score": clean_score,
+                "switchmix_score": mix_score,
+                "robustness_drop": clean_score - mix_score,
+                "n_clean": len(df_clean),
+                "n_switchmix": len(df_mix),
+            }
+        ]
+    )
 
-        df_clean = df[df["variant"] == "clean"]
-        df_mix = df[df["variant"] == "switchmix"]
-
-        if task == "nli":
-            clean_score = score_nli(df_clean)
-            mix_score = score_nli(df_mix)
-            metric = "accuracy"
-        else:
-            clean_score = score_qa(df_clean)
-            mix_score = score_qa(df_mix)
-            metric = "exact_match"
-
-        rows.append({
-            "task": task,
-            "model": model,
-            "metric": metric,
-            "clean_score": clean_score,
-            "switchmix_score": mix_score,
-            "robustness_drop": clean_score - mix_score
-        })
-
-    out = pd.DataFrame(rows)
     out_path = "results/tables/robustness_summary.csv"
     out.to_csv(out_path, index=False)
+
     print("saved:", out_path)
     print(out)
+
 
 if __name__ == "__main__":
     main()
