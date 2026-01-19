@@ -70,12 +70,13 @@ switchmixbench/
 ---
 
 ## Citation
-If you use this benchmark, please cite:
+**If you use this benchmark, please cite:**
 
-```bibtex
 @misc{switchmixbench2026,
   title={SwitchMixBench: A Robustness Benchmark for Multilingual Foundation Models under Code-Switching},
   author={Aissata Sidibe},
   year={2026},
   url={https://github.com/aissata-sidibe/switchmixbench}
 }
+
+---
