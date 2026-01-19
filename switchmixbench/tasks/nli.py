@@ -1,8 +1,10 @@
-def format_nli_prompt(premise: str, hypothesis: str):
+def format_nli_prompt(premise: str, hypothesis: str) -> str:
     return (
-        "Task: Natural Language Inference (NLI)\n"
-        "Decide if the hypothesis is entailed by, contradicts, or is neutral with respect to the premise.\n\n"
+        "You are an NLI classifier.\n"
+        "Return exactly ONE label from: entailment, contradiction, neutral.\n"
+        "Do not explain.\n\n"
         f"Premise: {premise}\n"
         f"Hypothesis: {hypothesis}\n\n"
-        "Answer with one label: entailment, contradiction, neutral."
+        "Label:"
     )
+
