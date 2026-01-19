@@ -5,7 +5,8 @@ from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, AutoModelForCausalLM
 import torch
 
-from switchmixbench.eval.metrics import accuracy, exact_match
+from switchmixbench.eval.metrics import accuracy, mean_f1
+
 from switchmixbench.utils.io import read_json
 
 def load_model(model_name: str):
@@ -59,8 +60,9 @@ def main():
         score = accuracy(preds, labels)
         metric = "accuracy"
     else:
-        score = exact_match(preds, labels)
-        metric = "exact_match"
+        score = mean_f1(preds, labels)
+        metric = "f1"
+
 
     print(f"{metric} = {score:.4f}")
 
