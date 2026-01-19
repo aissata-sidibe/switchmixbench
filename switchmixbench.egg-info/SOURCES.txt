@@ -1,0 +1,8 @@
+LICENSE
+README.md
+pyproject.toml
+switchmixbench/__init__.py
+switchmixbench.egg-info/PKG-INFO
+switchmixbench.egg-info/SOURCES.txt
+switchmixbench.egg-info/dependency_links.txt
+switchmixbench.egg-info/top_level.txt

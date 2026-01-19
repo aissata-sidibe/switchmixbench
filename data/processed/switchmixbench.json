@@ -1,0 +1,66 @@
+[
+  {
+    "uid": "nli_0001",
+    "task": "nli",
+    "split": "test",
+    "variant": "clean",
+    "prompt": "Task: Natural Language Inference (NLI)\nDecide if the hypothesis is entailed by, contradicts, or is neutral with respect to the premise.\n\nPremise: Le chat est sur le tapis.\nHypothesis: Un animal est sur le tapis.\n\nAnswer with one label: entailment, contradiction, neutral.",
+    "label": "entailment"
+  },
+  {
+    "uid": "nli_0001",
+    "task": "nli",
+    "split": "test",
+    "variant": "switchmix",
+    "prompt": "Task: Natural Language Inference (NLI)\nDecide if the hypothesis is entailed by, contradicts, or is neutral with respect to the premise.\n\nPremise: Le chat est sur le tapis.\nHypothesis: Un animal est sur le tapis.\n\nAnswer with one label: entailment, contradiction, neutral.",
+    "label": "entailment"
+  },
+  {
+    "uid": "nli_0002",
+    "task": "nli",
+    "split": "test",
+    "variant": "clean",
+    "prompt": "Task: Natural Language Inference (NLI)\nDecide if the hypothesis is entailed by, contradicts, or is neutral with respect to the premise.\n\nPremise: Il pleut aujourd'hui à Paris.\nHypothesis: Le temps est sec.\n\nAnswer with one label: entailment, contradiction, neutral.",
+    "label": "contradiction"
+  },
+  {
+    "uid": "nli_0002",
+    "task": "nli",
+    "split": "test",
+    "variant": "switchmix",
+    "prompt": "Task: Natural Language Inference (NLI)\nDecide if the hypothesis is entailed by, contradicts, or is neutral with respect to the premise.\n\nPremise: Il pleut aujourd'hui à Paris.!!\nHypothesis: Le temps est sec.\n\nAnswer with one label: entailment, contradiction, neutral.",
+    "label": "contradiction"
+  },
+  {
+    "uid": "nli_0003",
+    "task": "nli",
+    "split": "test",
+    "variant": "clean",
+    "prompt": "Task: Natural Language Inference (NLI)\nDecide if the hypothesis is entailed by, contradicts, or is neutral with respect to the premise.\n\nPremise: Marie a acheté une voiture.\nHypothesis: Marie aime le sport.\n\nAnswer with one label: entailment, contradiction, neutral.",
+    "label": "neutral"
+  },
+  {
+    "uid": "nli_0003",
+    "task": "nli",
+    "split": "test",
+    "variant": "switchmix",
+    "prompt": "Task: Natural Language Inference (NLI)\nDecide if the hypothesis is entailed by, contradicts, or is neutral with respect to the premise.\n\nPremise: Marie a acheté une voiture.\nHypothesis: Marie aime le sport.\n\nAnswer with one label: entailment, contradiction, neutral.",
+    "label": "neutral"
+  },
+  {
+    "uid": "qa_0001",
+    "task": "qa",
+    "split": "test",
+    "variant": "clean",
+    "prompt": "Task: Question Answering\nAnswer the question using only the provided context.\n\nContext: Paul est allé au marché ce matin pour acheter des fruits. Il a choisi des pommes et des bananes.\nQuestion: Quels fruits Paul a-t-il achetés ?\n\nAnswer:",
+    "label": "pommes et bananes"
+  },
+  {
+    "uid": "qa_0001",
+    "task": "qa",
+    "split": "test",
+    "variant": "switchmix",
+    "prompt": "Task: Question Answering\nAnswer the question using only the provided context.\n\nContext: Paul est allé au marché ce matin pour acheter des fruits. Il a choisi des pommes et des bananes.\nQuestion: Quels fruits Paul a-t-il achetés ?\n\nAnswer:",
+    "label": "pommes et bananes"
+  }
+]

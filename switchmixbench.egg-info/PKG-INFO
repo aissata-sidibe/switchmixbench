@@ -1,0 +1,11 @@
+Metadata-Version: 2.4
+Name: switchmixbench
+Version: 0.1.0
+Summary: Code-switching robustness benchmark for multilingual foundation models
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Dynamic: license-file
+
+# switchmixbench
+Code-switching robustness benchmark for multilingual foundation models (FR/EN)
