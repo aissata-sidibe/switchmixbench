@@ -1,0 +1,22 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environment
+.venv/
+
+# Build artifacts
+*.egg-info/
+build/
+dist/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Generated artifacts (DO NOT COMMIT)
+data/
+results/
+**/.cache/
+**/cache/
