@@ -1,2 +1,0 @@
-data_path,model,device,max_length,n_pairs,avg_seq_len_clean,avg_seq_len_perturbed,avg_seq_len_delta,avg_latency_ms_clean,avg_latency_ms_perturbed,avg_latency_ms_delta,hidden_size,activation_bytes_clean_est,activation_bytes_perturbed_est,activation_bytes_delta_est,include_tokenization_time
-data/processed/nli_test_fr-en.jsonl,xlm-roberta-base,cpu,256,200,55.14,55.815,0.6749999999999972,76.73591350117931,75.07306750107091,-1.6628460001084022,768,168960,172032,3072,False
