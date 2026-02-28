@@ -1,0 +1,14 @@
+data_path,model,pool,task,split,layer,n_pairs,mean_cosine,std_cosine,mean_drift
+data/processed/nli_test_fr-en.jsonl,xlm-roberta-base,cls,nli,test,0,200,0.9999997615814209,0.0,2.384185791015625e-07
+data/processed/nli_test_fr-en.jsonl,xlm-roberta-base,cls,nli,test,1,200,0.9999998787045479,2.427290759028464e-07,1.2129545211791993e-07
+data/processed/nli_test_fr-en.jsonl,xlm-roberta-base,cls,nli,test,2,200,0.9999997854232788,6.093682250562696e-07,2.1457672119140626e-07
+data/processed/nli_test_fr-en.jsonl,xlm-roberta-base,cls,nli,test,3,200,0.999999917447567,2.4753354006617876e-07,8.255243301391602e-08
+data/processed/nli_test_fr-en.jsonl,xlm-roberta-base,cls,nli,test,4,200,0.9999998652935028,2.2722116157127708e-07,1.347064971923828e-07
+data/processed/nli_test_fr-en.jsonl,xlm-roberta-base,cls,nli,test,5,200,0.9999995642900467,7.256945667372366e-07,4.3570995330810545e-07
+data/processed/nli_test_fr-en.jsonl,xlm-roberta-base,cls,nli,test,6,200,0.9999999526143074,1.2117457165858067e-07,4.738569259643555e-08
+data/processed/nli_test_fr-en.jsonl,xlm-roberta-base,cls,nli,test,7,200,0.9999998834729195,2.7381166510191817e-07,1.1652708053588868e-07
+data/processed/nli_test_fr-en.jsonl,xlm-roberta-base,cls,nli,test,8,200,0.9999999153614044,2.080500958351949e-07,8.463859558105468e-08
+data/processed/nli_test_fr-en.jsonl,xlm-roberta-base,cls,nli,test,9,200,0.9999999496340751,1.6443726764790468e-07,5.0365924835205077e-08
+data/processed/nli_test_fr-en.jsonl,xlm-roberta-base,cls,nli,test,10,200,0.9999993017315865,1.3903526355807286e-06,6.982684135437012e-07
+data/processed/nli_test_fr-en.jsonl,xlm-roberta-base,cls,nli,test,11,200,0.999998913705349,4.919363972142952e-06,1.0862946510314942e-06
+data/processed/nli_test_fr-en.jsonl,xlm-roberta-base,cls,nli,test,12,200,0.9999574866890907,8.017469290642502e-05,4.251331090927124e-05

@@ -1,0 +1,32 @@
+seed: 42
+
+task: qa
+
+language_pair:
+  clean_lang: fr
+  insert_lang: en
+
+source:
+  kind: hf
+  dataset_name: xquad
+  dataset_config_clean: xquad.fr
+  dataset_config_insert: xquad.en
+  allow_fallback_synthetic: true
+
+splits:
+  train:
+    source_split: train
+    n_examples: 10000
+  test:
+    source_split: validation
+    n_examples: 2000
+
+perturbations:
+  code_switch:
+    p_switch: 0.35
+  noise:
+    p: 0.15
+
+output:
+  out_dir: data/processed
+

@@ -1,0 +1,26 @@
+seed: 42
+
+task: nli
+
+language_pair:
+  clean_lang: fr
+  insert_lang: en
+
+source:
+  kind: synthetic
+
+splits:
+  train:
+    n_examples: 20000
+  test:
+    n_examples: 5000
+
+perturbations:
+  code_switch:
+    p_switch: 0.35
+  noise:
+    p: 0.15
+
+output:
+  out_dir: data/processed
+

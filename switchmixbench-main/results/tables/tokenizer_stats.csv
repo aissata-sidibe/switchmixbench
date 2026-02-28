@@ -1,0 +1,2 @@
+data_path,task,split,tokenizer,n_pairs,avg_clean_tokens,avg_perturbed_tokens,avg_token_increase,avg_length_inflation,avg_fragmentation_clean,avg_fragmentation_perturbed,avg_tokens_per_char_clean,avg_tokens_per_char_perturbed,token_js_divergence_bits
+data/processed/nli_test_fr-en.jsonl,nli,test,xlm-roberta-base,500,55.038,55.726,0.688,1.0119195276966861,1.8612870967741932,1.8589954411524128,0.3270261306368703,0.32721659414621673,0.005578309982520304

@@ -1,0 +1,2 @@
+task,model,metric,clean_score,switchmix_score,robustness_drop,n_clean,n_switchmix
+nli,google/flan-t5-small,accuracy,0.191,0.03,0.161,1000,1000
