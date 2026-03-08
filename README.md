@@ -2,7 +2,7 @@
 
 You can find the SwitchMixBench paper here:
 
-👉 [SwitchMixBench Paper (PDF)](./SwitchMixBench_Paper.pdf)
+👉 [SwitchMixBench_Paper.pdf](https://github.com/user-attachments/files/25824217/SwitchMixBench_Paper.pdf)
 
 This work evaluates multilingual language model robustness under code-switching and informal noise and includes tokenizer-level and representation-level diagnostic analyses.
 
