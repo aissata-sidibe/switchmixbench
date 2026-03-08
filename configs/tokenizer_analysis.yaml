@@ -1,0 +1,8 @@
+data_paths:
+  - data/processed/nli_test_fr-en.jsonl
+
+tokenizer: xlm-roberta-base
+max_pairs: 500
+
+output_csv: results/tables/tokenizer_stats.csv
+

@@ -1,0 +1,24 @@
+seed: 42
+
+train_paths:
+  - data/processed/nli_train_fr-en.jsonl
+test_paths:
+  - data/processed/nli_test_fr-en.jsonl
+
+models:
+  - distilbert-base-multilingual-cased
+  - bert-base-multilingual-cased
+  - xlm-roberta-base
+  - xlm-roberta-large
+
+max_length: 256
+epochs: 1.0
+batch_size: 16
+lr: 2e-5
+
+# Optional quick smoke-run knobs:
+# max_train_examples: 2000
+# max_test_examples: 500
+
+output_csv: results/tables/scaling_results.csv
+
