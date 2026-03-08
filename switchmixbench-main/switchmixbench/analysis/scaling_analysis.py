@@ -1,5 +1,13 @@
 from __future__ import annotations
 
+"""Scaling behaviour analysis across encoder model sizes.
+
+This module fine-tunes several multilingual encoders on clean NLI data and
+evaluates them on both clean and perturbed splits. It reports the robustness
+gap Δ between these two conditions as a function of model size.
+"""
+
+import shutil
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -9,6 +17,7 @@ import numpy as np
 import pandas as pd
 
 from switchmixbench.utils.io import read_any
+from switchmixbench.analysis.scaling_utils import estimate_model_size
 
 
 def _lazy_torch_transformers():
@@ -108,13 +117,13 @@ def _prepare_nli_dataset(tok, rows: List[Dict[str, Any]], max_length: int) -> Tu
         labels.append(LABEL2ID[lab])
 
     enc = tok(
-        text_a,
-        text_b,
-        truncation=True,
-        max_length=max_length,
-        padding=False,
-        return_tensors="pt",
-    )
+    text_a,
+    text_b,
+    truncation=True,
+    padding="max_length",
+    max_length=max_length,
+    return_tensors="pt",
+)
     ds = _NLITorchDataset(enc, labels)
     return ds, skipped
 
@@ -142,6 +151,7 @@ def run_scaling_experiment(
     batch_size: int = 16,
     lr: float = 2e-5,
 ) -> str:
+    """Run the multi-model scaling experiment and write results to CSV."""
     (
         torch,
         AutoTokenizer,
@@ -184,9 +194,12 @@ def run_scaling_experiment(
 
         data_collator = DataCollatorWithPadding(tokenizer=tok)
 
+        out_dir = Path("results/artifacts/scaling_tmp")
+        if out_dir.exists():
+            shutil.rmtree(out_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
         args = TrainingArguments(
-            output_dir="results/artifacts/scaling_tmp",
-            overwrite_output_dir=True,
+            output_dir=str(out_dir),
             do_train=True,
             do_eval=False,
             learning_rate=lr,
@@ -199,8 +212,12 @@ def run_scaling_experiment(
             seed=seed,
         )
 
-        trainer = Trainer(model=model, args=args, train_dataset=train_ds, data_collator=data_collator, tokenizer=tok)
-
+        trainer_kwargs = dict(model=model,args=args,train_dataset=train_ds,data_collator=data_collator,)
+        try:
+            trainer = Trainer(**trainer_kwargs, tokenizer=tok)
+        except TypeError:
+            trainer = Trainer(**trainer_kwargs)
+            
         t0 = time.time()
         trainer.train()
         train_time_s = time.time() - t0
@@ -212,8 +229,10 @@ def run_scaling_experiment(
         clean_acc = _accuracy_from_logits(pred_clean.predictions, pred_clean.label_ids)
         pert_acc = _accuracy_from_logits(pred_pert.predictions, pred_pert.label_ids)
 
+        robustness_drop = float(clean_acc - pert_acc)
         records.append(
             {
+                # Existing fields (schema preserved)
                 "task": "nli",
                 "model": model_name,
                 "seed": int(seed),
@@ -227,12 +246,17 @@ def run_scaling_experiment(
                 "test_perturbed_skipped": int(test_pert_skipped),
                 "clean_accuracy": float(clean_acc),
                 "perturbed_accuracy": float(pert_acc),
-                "robustness_gap_delta": float(clean_acc - pert_acc),
+                "robustness_gap_delta": robustness_drop,
                 "epochs": float(epochs),
                 "batch_size": int(batch_size),
                 "lr": float(lr),
                 "max_length": int(max_length),
                 "train_time_s": float(train_time_s),
+                # New, additive fields (do not break existing consumers)
+                "model_name": model_name,
+                "estimated_model_size": estimate_model_size(model_name),
+                "switchmix_accuracy": float(pert_acc),
+                "robustness_drop": robustness_drop,
             }
         )
 

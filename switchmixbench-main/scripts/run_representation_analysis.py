@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""CLI entrypoint for representation stability analysis."""
+
 import sys
 import argparse
 from pathlib import Path

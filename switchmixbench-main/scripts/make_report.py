@@ -1,6 +1,9 @@
+"""Concatenate all CSV tables in results/tables into a single file."""
+
 import glob
 import os
 import pandas as pd
+
 
 def main():
     os.makedirs("results/tables", exist_ok=True)

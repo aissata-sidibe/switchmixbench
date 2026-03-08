@@ -1,5 +1,13 @@
+"""Small JSON / JSONL I/O helpers used across SwitchMixBench.
+
+The benchmark deliberately keeps file formats simple and line‑oriented so that
+datasets can be streamed and manipulated with standard tooling. This module
+centralises common read/write helpers to avoid duplicating boilerplate.
+"""
+
 import json
 from pathlib import Path
+
 
 def read_json(path):
     path = Path(path)
@@ -18,10 +26,10 @@ def read_jsonl(path):
     return rows
 
 def read_any(path):
-    """
-    Backwards-compatible loader.
-    - *.json  -> list/dict JSON
-    - *.jsonl -> list of JSON objects (one per line)
+    """Load either JSON or JSONL depending on the filename extension.
+
+    ``*.json`` files are parsed as a single JSON document; ``*.jsonl`` files
+    are read as a list of JSON objects, one per line.
     """
     path = Path(path)
     if path.suffix.lower() == ".jsonl":

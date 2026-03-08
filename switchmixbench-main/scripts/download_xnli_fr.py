@@ -1,9 +1,12 @@
+"""Download a small French slice of XNLI for the legacy pipeline."""
+
 from datasets import load_dataset
 import random
 import os
 import json
 
 OUT_PATH = "data/raw/xnli_fr_1000.json"
+
 
 def main():
     os.makedirs("data/raw", exist_ok=True)

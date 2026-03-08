@@ -1,3 +1,11 @@
+"""Simple generative evaluation loop for SwitchMixBench.
+
+This module provides a small CLI that runs a Hugging Face text-to-text or
+causal LM on the processed benchmark JSON/JSONL file and writes per-example
+predictions and scores. It is intentionally generic and model-agnostic so
+that it can be reused in quick experiments.
+"""
+
 import sys
 from pathlib import Path
 

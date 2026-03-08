@@ -1,255 +1,276 @@
-# SwitchMixBench
+## Project Overview
 
-SwitchMixBench is a lightweight research benchmark for evaluating the robustness of multilingual foundation models under code-switching, informal language, and noisy text.
+SwitchMixBench is a small, focused research benchmark for evaluating the **robustness of multilingual foundation models** under:
 
-Rather than optimizing for leaderboard performance, the benchmark is designed to measure brittleness: how quickly performance collapses when inputs shift from clean text to realistic mixed-language user text.
+- code-switching between French and English
+- informal / noisy user text
+- small controlled perturbations
 
----
+The benchmark is designed to measure **brittleness**, not leaderboard performance: how quickly performance degrades when moving from clean, well‑formed text to realistic mixed-language inputs.
 
-## Motivation
+### High-level architecture
 
-Most multilingual evaluation benchmarks assume:
-- clean, well-formed sentences
-- a single language per example
-- formal register
+- **Data generation**
+  - Seed or Hugging Face datasets (e.g. `xnli`) provide parallel French / English text.
+  - Deterministic rules inject code-switching and informal noise to build paired `clean` vs `perturbed` examples.
+  - Processed data are stored as JSONL under `data/processed/`.
+- **Evaluation**
+  - Baseline classifiers and generative models consume the processed data and log predictions to `results/tables/`.
+- **Analysis**
+  - Dedicated modules quantify robustness at multiple levels:
+    - tokenizer behaviour
+    - hidden-state representation stability
+    - multi-model scaling trends
+    - efficiency / latency impact
 
-In practice, real-world user text often contains:
-- code-switching
-- informal spellings and abbreviations
-- mixed scripts, borrowed words, and transliteration
-- noisy punctuation and grammar
-
-SwitchMixBench provides a reproducible way to quantify this gap.
-
----
-
-## Tasks
-
-Current tasks included:
-
-- NLI (Natural Language Inference)  
-  Given a premise and hypothesis, predict one label: entailment, neutral, or contradiction.
-
-Additional tasks (QA / sentiment / safety) can be added using the same benchmark format.
+The codebase aims to be **small, readable, and reproducible**, suitable for academic review and public release.
 
 ---
 
-## Data format
+## Installation
 
-Each example includes:
-- id: unique identifier
-- task: task name (nli, qa, ...)
-- split: train or test
-- variant: clean or switchmix
-- input / prompt: model input text
-- label: ground truth label
+- **Python**: 3.11 or 3.12 is recommended (3.9+ is supported).
+- **OS**: Linux, macOS, and Windows are supported; the examples below use Windows PowerShell paths.
 
-The benchmark is structured so that clean vs switchmix examples share the same underlying meaning, but differ in surface form.
+### 1. Create and activate a virtual environment
+
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+```
+
+### 2. Install dependencies
+
+```powershell
+pip install -r requirements.txt
+```
+
+### 3. Install SwitchMixBench in editable mode
+
+From the project root (the directory containing `pyproject.toml`):
+
+```powershell
+pip install -e .
+```
+
+This makes the `switchmixbench` package importable while you edit the code.
 
 ---
 
-## Installation (Windows PowerShell)
+## How to Run the Benchmark
 
-Create a virtual environment:
+All commands below assume you are in the project root (`switchmixbench-main/`) with the virtual environment activated.
 
-    python -m venv .venv
-    .venv\Scripts\Activate.ps1
+### 1. Build dataset
 
-Install dependencies:
+Build a French–English NLI dataset using XNLI (with synthetic fallback if HF download is unavailable):
 
-    pip install -r requirements.txt
+```powershell
+python scripts/build_dataset.py --config configs/dataset_xnli_fr_en.yaml
+```
+
+This generates, for example:
+
+- `data/processed/nli_train_fr-en.jsonl`
+- `data/processed/nli_test_fr-en.jsonl`
+
+Inspect dataset stats and paired examples:
+
+```powershell
+python scripts/inspect_dataset.py --path data/processed/nli_test_fr-en.jsonl --show 3
+```
+
+### 2. Run baseline evaluation
+
+The random-label baseline operates directly on the processed JSON/JSONL file:
+
+```powershell
+python scripts/run_baselines.py --data data/processed/switchmixbench.json --task nli
+```
+
+This writes a CSV containing predictions and labels:
+
+- `results/tables/nli_baseline_random.csv`
+
+For generative baselines (e.g. FLAN‑T5), you can also use:
+
+```powershell
+python switchmixbench/eval/run_eval.py --model google/flan-t5-small --task nli --split test
+```
+
+### 3. Run tokenizer analysis
+
+```powershell
+python scripts/run_tokenizer_analysis.py --config configs/tokenizer_analysis.yaml
+```
+
+### 4. Run representation analysis
+
+```powershell
+python scripts/run_representation_analysis.py --config configs/representation_analysis.yaml
+```
+
+### 5. Run scaling analysis
+
+```powershell
+python scripts/run_scaling_analysis.py --config configs/scaling_analysis.yaml
+```
+
+### 6. Run efficiency analysis
+
+```powershell
+python scripts/run_efficiency_analysis.py --config configs/efficiency_analysis.yaml
+```
 
 ---
 
-## Quickstart
+## Output Structure
 
-Prepare processed benchmark JSON:
+- **`data/processed/`**
+  - Contains JSON and JSONL files used by the benchmark.
+  - JSONL rows follow a common schema, e.g.:
+    - `task`: `nli`, `qa`, ...
+    - `split`: `train`, `test`
+    - `variant`: `clean`, `perturbed` (or `switchmix` for legacy)
+    - `input` / `prompt`: model input text
+    - `label` / `target`: ground-truth label or answer
+    - `pair_id`: identifier linking clean vs perturbed variants
+    - `metadata`: details of the applied perturbations and language pair.
 
-    python scripts/prepare_data.py
+- **`results/tables/`**
+  - All analysis scripts write tidy CSV tables here:
+    - `tokenizer_stats.csv`: token counts, fragmentation, JS divergence.
+    - `representation_shift.csv`: layer-wise cosine similarity and drift.
+    - `scaling_results.csv`: accuracy on clean vs perturbed by model size, plus robustness gap Δ.
+    - `efficiency_metrics.csv`: sequence lengths, latency deltas, and activation-size estimates.
+    - Additional per-model evaluation outputs, e.g.:
+      - `nli_test_google_flan-t5-small.csv`
+      - `nli_baseline_random.csv`
 
-This generates:
+These files are designed for direct use in plotting notebooks or downstream statistical analysis.
 
-    data/processed/switchmixbench.json
+---
 
-Run evaluation (NLI baseline):
+## Reproducibility Notes
 
-    python switchmixbench/eval/run_eval.py --model google/flan-t5-small --task nli --split test
+- **Random seeds**
+  - Dataset generation uses explicit seeds in `configs/dataset_*.yaml`.
+  - Scaling experiments set a global seed via `transformers.set_seed`.
+  - Perturbation functions in `switchmixbench.generate.*` take explicit `seed` arguments and are tested for determinism.
+
+- **CPU vs GPU**
+  - All core functionality runs on CPU.
+  - Representation, scaling, and efficiency analyses will automatically use GPU if available, but can be forced onto CPU via config (`device: cpu`) or CLI arguments where applicable.
+
+- **Deterministic runs**
+  - The perturbation and dataset builders are deterministic for a fixed seed and configuration.
+  - Deep learning training and inference are subject to standard PyTorch/transformers nondeterminism; for strict reproducibility, enable deterministic flags in your environment in addition to the seeds used here.
+
+---
+
+## Running Tests
+
+The repository ships with a small, high-signal pytest suite that checks:
+
+- pair generation invariants
+- perturbation determinism
+- tokenizer / representation / efficiency analysis shapes and sanity bounds
+
+From the project root:
+
+```powershell
+python -m pytest
+```
+
+All tests:
+
+- run on CPU
+- avoid large model downloads by using small fake tokenizers/models
+- complete in well under 60 seconds on a typical laptop
+
+---
+
+## Extended Experiments
+
+The repository also includes a set of **extended experiments** and plotting
+helpers intended for paper-ready analyses.
+
+### Robustness scaling experiment
+
+Run the larger FR–EN scaling experiment (using a broader model list and
+larger dataset) with:
+
+```powershell
+python scripts/run_scaling_analysis.py --config configs/scaling_analysis_large.yaml
+```
 
 This writes:
 
-    results/tables/nli_test_google_flan-t5-small.csv
+- `results/tables/scaling_results_large.csv`
 
----
+which contains, for each model:
 
-## Research-grade (config-driven) pipeline
+- `model` / `model_name`
+- `estimated_model_size` (in millions of parameters, when known)
+- `clean_accuracy`
+- `switchmix_accuracy`
+- `robustness_drop`
 
-The original `scripts/prepare_data.py` + generative `run_eval.py` pipeline remains supported.
-For research-scale experiments and reproducible analyses, use the YAML-driven dataset builder and analysis scripts below.
+### Cross-language robustness analysis
 
-### Experimental protocol (recommended)
+After you have generated robustness summaries for multiple language pairs
+using `scripts/robustness_report.py` (e.g. FR–EN and FR–ES), you can build
+a unified cross-language table:
 
-- **Build paired datasets**: generate `clean` vs `perturbed` examples at scale (5k–50k pairs per task/split).
-- **Run robustness experiments**:
-  - **Tokenizer-level**: how perturbations change tokenization statistics.
-  - **Representation stability**: layer-wise cosine similarity clean vs perturbed hidden states.
-  - **Scaling**: train (on clean) and evaluate clean vs perturbed across model sizes; report robustness gap \( \Delta \).
-  - **Efficiency**: latency and sequence-length inflation under perturbations.
-- **Save all outputs** under `results/tables/*.csv` for easy aggregation and plotting.
+```powershell
+python scripts/run_cross_language_analysis.py
+```
 
----
+This reads all `results/tables/robustness_summary*.csv` files and writes:
 
-## Dataset building (JSONL, scalable)
+- `results/tables/cross_language_robustness.csv`
 
-Build a large paired dataset from a public Hugging Face dataset (with offline synthetic fallback):
+with one row per `(language_pair, model)`.
 
-    python scripts/build_dataset.py --config configs/dataset_xnli_fr_en.yaml
+### Plot generation
 
-This generates (example):
+To generate publication-ready figures:
 
-    data/processed/nli_train_fr-en.jsonl
-    data/processed/nli_test_fr-en.jsonl
+```powershell
+python scripts/generate_plots.py
+```
 
-Inspect dataset stats and example pairs:
+This creates:
 
-    python scripts/inspect_dataset.py --path data/processed/nli_test_fr-en.jsonl --show 3
+- `results/figures/robustness_scaling.png`
+  - x-axis: `estimated_model_size`
+  - y-axis: `robustness_drop`
+- `results/figures/cross_language_robustness.png`
+  - x-axis: `language_pair`
+  - y-axis: `robustness_drop`
+  - colour: `model`
 
-### Output schema (per JSONL row)
+All figures are stored under:
 
-Each line is a JSON object with (at minimum):
+- `results/figures/`
 
-- **task**: `nli` / `qa`
-- **split**: `train` / `test`
-- **variant**: `clean` / `perturbed`
-- **input** (and `prompt` alias): model input text
-- **label** (and `target` alias): ground-truth label/answer
-- **metadata**: perturbation parameters and provenance
-
-Additional fields (`pair_id`, `text_a`, `text_b`) are included to support analysis modules.
-
----
-
-## Analysis modules (results/tables/*.csv)
-
-All analysis scripts are independent CLI entry points and take YAML configs under `configs/`.
-
-### Tokenization analysis
-
-    python scripts/run_tokenizer_analysis.py --config configs/tokenizer_analysis.yaml
-
-Writes:
-
-    results/tables/tokenizer_stats.csv
-
-### Representation stability (hidden-state drift)
-
-    python scripts/run_representation_analysis.py --config configs/representation_analysis.yaml
-
-Writes:
-
-    results/tables/representation_shift.csv
-
-### Multi-model scaling robustness (Δ gap across model sizes)
-
-This fine-tunes each encoder model on **clean train** NLI data and evaluates on **clean vs perturbed test**.
-
-    python scripts/run_scaling_analysis.py --config configs/scaling_analysis.yaml
-
-Writes:
-
-    results/tables/scaling_results.csv
-
-### Efficiency impact
-
-    python scripts/run_efficiency_analysis.py --config configs/efficiency_analysis.yaml
-
-Writes:
-
-    results/tables/efficiency_metrics.csv
-
----
-
-## Reproducibility
-
-- **All experiment knobs live in YAML** under `configs/` (dataset source, sizes, language pairs, perturbation intensity, analysis parameters).
-- **Datasets are stored as JSONL** under `data/processed/` to preserve provenance and enable streaming.
-- **Results are stored as CSV** under `results/tables/` for easy aggregation (`scripts/make_report.py` can still be used for concatenation).
-
-### Expected outputs
-
-- `data/processed/nli_{train,test}_fr-en.jsonl`
-- `results/tables/tokenizer_stats.csv`
-- `results/tables/representation_shift.csv`
-- `results/tables/scaling_results.csv`
-- `results/tables/efficiency_metrics.csv`
-
----
-
-## Metrics
-
-- NLI: Accuracy  
-- QA: Token-level F1 (when enabled)
-
----
-
-## Baseline results
-
-We report performance under two conditions:
-- clean: original inputs
-- switchmix: code-switched + noisy variant
-
-Model: google/flan-t5-small  
-Task: NLI  
-Metric: Accuracy  
-
-Clean accuracy: 0.191  
-SwitchMix accuracy: 0.030  
-Robustness drop: 0.161  
-
-Interpretation: the model exhibits a large degradation under code-switching noise, highlighting brittleness of multilingual foundation models under realistic mixed-language inputs.
-
----
-
-## Robustness summary
-
-Generate the robustness summary table:
-
-    python scripts/robustness_report.py
-    python -c "import pandas as pd; print(pd.read_csv('results/tables/robustness_summary.csv').to_string(index=False))"
-
-Output:
-
-    results/tables/robustness_summary.csv
-
----
-
-## Reproducibility
-
-- Raw datasets are not committed to the repo (data/raw/ is ignored).
-- Results tables are generated by scripts and stored under results/tables/.
-- Evaluation uses Hugging Face transformers for model loading and inference.
-
----
-
-## Roadmap
-
-Planned research extensions:
-- add more multilingual foundation models (instruction-tuned + causal LMs)
-- add more tasks (QA, sentiment, toxicity / safety)
-- add controlled perturbations (typos, transliteration, slang)
-- expand beyond French/English into West African languages (e.g., Bambara)
+You can then include these directly in your paper or slides.
 
 ---
 
 ## Citation
 
-If you use this benchmark, please cite:
+If you use SwitchMixBench in academic work, please cite:
 
-    @misc{switchmixbench2026,
-      title={SwitchMixBench: A Robustness Benchmark for Multilingual Foundation Models under Code-Switching},
-      author={Aissata Sidibe},
-      year={2026},
-      url={https://github.com/aissata-sidibe/switchmixbench}
-    }
+```bibtex
+@misc{switchmixbench2026,
+  title  = {SwitchMixBench: A Robustness Benchmark for Multilingual Foundation Models under Code-Switching},
+  author = {Sidibe, Aissata},
+  year   = {2026},
+  note   = {Version 0.1},
+  url    = {https://github.com/aissata-sidibe/switchmixbench}
+}
+```
 
 ---
 

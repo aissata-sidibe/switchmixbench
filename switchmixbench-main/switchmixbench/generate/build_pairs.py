@@ -1,6 +1,15 @@
+"""SwitchMix pair construction utilities.
+
+This module contains a small helper dataclass and a single convenience function
+used by the prototype pipeline to construct aligned clean vs. switchmixed
+pairs from parallel French/English inputs. It intentionally stays lightweight
+so that it can be reused by both data-building scripts and tests.
+"""
+
 from dataclasses import dataclass
 from switchmixbench.generate.code_switch_rules import mix_sentences
 from switchmixbench.generate.noise_injectors import inject_informal_noise
+
 
 @dataclass
 class Example:
@@ -12,10 +21,37 @@ class Example:
     text_b: str
     label: str
 
+
 def build_switchmix_pair(uid, task, split, fr_a, en_a, fr_b=None, en_b=None, label=""):
-    """
-    For NLI: text_a=premise, text_b=hypothesis
-    For QA:  text_a=context, text_b=question
+    """Build a clean / switchmix pair for a single underlying example.
+
+    Parameters
+    ----------
+    uid:
+        Unique identifier for the underlying semantic example.
+    task:
+        Task name (e.g. ``\"nli\"`` or ``\"qa\"``).
+    split:
+        Dataset split (e.g. ``\"train\"`` or ``\"test\"``).
+    fr_a, en_a:
+        Parallel French / English texts for the first field
+        (premise or context depending on the task).
+    fr_b, en_b:
+        Optional parallel texts for the second field (hypothesis / question).
+        When omitted, ``text_b`` in the clean example is left empty.
+    label:
+        Gold label or answer string, copied verbatim to both variants.
+
+    Returns
+    -------
+    list[Example]
+        A list of length two containing a clean example and its switchmixed
+        counterpart. The order is always ``[clean, switchmix]``.
+
+    Notes
+    -----
+    For NLI, ``text_a`` is the premise and ``text_b`` is the hypothesis.
+    For QA,  ``text_a`` is the context and ``text_b`` is the question.
     """
     clean_a = fr_a
     clean_b = fr_b if fr_b is not None else ""

@@ -1,0 +1,10 @@
+data_paths:
+  - data/processed/nli_test_fr-es.jsonl
+
+model: xlm-roberta-base
+pool: cls
+max_pairs: 200
+max_length: 256
+
+output_csv: results/tables/representation_shift_fr-es.csv
+

@@ -1,5 +1,13 @@
 from __future__ import annotations
 
+"""Config-driven dataset builder for SwitchMixBench.
+
+This script reads a YAML config describing the dataset source (HF vs
+synthetic), language pair, perturbation parameters and split sizes, builds
+paired clean vs perturbed examples, and writes them as JSONL files under
+`data/processed/`.
+"""
+
 import sys
 import argparse
 import os
@@ -357,6 +365,12 @@ def main():
     args = ap.parse_args()
 
     cfg = load_yaml(args.config)
+
+    # Minimal validation for common config mistakes.
+    if "task" not in cfg:
+        raise ValueError("Dataset config is missing required key: 'task'.")
+    if "source" not in cfg or not isinstance(cfg["source"], dict):
+        raise ValueError("Dataset config is missing required mapping key: 'source'.")
 
     out_dir = Path(args.out_dir or get(cfg, "output.out_dir", "data/processed"))
     out_dir.mkdir(parents=True, exist_ok=True)

@@ -1,6 +1,8 @@
-"""
-Research-grade analysis modules for SwitchMixBench.
+"""Top-level namespace for SwitchMixBench analysis utilities.
 
-All modules are optional; the original evaluation pipeline remains functional.
+The functions exposed by the submodules in this package implement the
+tokenisation, representation, scaling and efficiency analyses described in
+the accompanying paper. They are designed to be imported by small CLI
+wrappers and to remain optional with respect to the core benchmark.
 """
 

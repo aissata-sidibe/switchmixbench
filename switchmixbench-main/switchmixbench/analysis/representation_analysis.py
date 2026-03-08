@@ -1,5 +1,16 @@
 from __future__ import annotations
 
+"""Hidden-state representation stability analysis.
+
+This module extracts layer-wise hidden states from encoder-style transformer
+models and measures how similar clean vs. perturbed representations are for
+paired inputs. It reports cosine similarity and an induced "drift" score
+per layer, task, and split.
+
+The input is one or more SwitchMixBench dataset files; the output is a CSV
+summarising representation stability across layers.
+"""
+
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
@@ -23,6 +34,7 @@ def _lazy_transformers():
 
 
 def _pair_rows(rows: List[Dict[str, Any]]) -> Dict[str, Dict[str, Dict[str, Any]]]:
+    """Group dataset rows into clean / perturbed pairs."""
     pairs: Dict[str, Dict[str, Dict[str, Any]]] = defaultdict(dict)
     for r in rows:
         pid = r.get("pair_id")
@@ -36,7 +48,17 @@ def _pair_rows(rows: List[Dict[str, Any]]) -> Dict[str, Dict[str, Dict[str, Any]
 
 
 def _pool(hidden, attention_mask, pool: str):
-    # hidden: [B, T, H]
+    """Pool token-level representations into a single vector per sequence.
+
+    Parameters
+    ----------
+    hidden:
+        Tensor of shape ``[batch, seq_len, hidden_size]``.
+    attention_mask:
+        Mask tensor of shape ``[batch, seq_len]`` indicating valid tokens.
+    pool:
+        Either ``\"cls\"`` (first token) or ``\"mean\"`` (mask‑aware average).
+    """
     if pool == "cls":
         return hidden[:, 0, :]
     if pool == "mean":
@@ -55,6 +77,29 @@ def compute_representation_shift(
     max_length: int = 256,
     device: Optional[str] = None,
 ) -> pd.DataFrame:
+    """Compute layer-wise representation similarity between clean and perturbed inputs.
+
+    Parameters
+    ----------
+    data_paths:
+        One or more dataset shards to analyse.
+    model_name_or_path:
+        Name or path understood by ``transformers.AutoModel``.
+    pool:
+        Pooling strategy for sequence representations (``\"cls\"`` or ``\"mean\"``).
+    max_pairs:
+        Optional maximum number of pairs per shard (for speed).
+    max_length:
+        Maximum sequence length passed to the tokenizer.
+    device:
+        Explicit device string (e.g. ``\"cpu\"`` or ``\"cuda\"``). When ``None``,
+        the analysis prefers GPU if available.
+
+    Returns
+    -------
+    pandas.DataFrame
+        One row per (task, split, layer) with cosine similarity and drift.
+    """
     torch, AutoTokenizer, AutoModel = _lazy_transformers()
 
     tok = AutoTokenizer.from_pretrained(model_name_or_path, use_fast=True)
@@ -74,7 +119,7 @@ def compute_representation_shift(
 
         pairs = _pair_rows(rows)
         pair_ids = list(pairs.keys())
-        if max_pairs is not None:
+        if max_pairs is not None and max_pairs >= 0:
             pair_ids = pair_ids[: max_pairs]
 
         # Accumulators: (task, split, layer) -> list[cos]
@@ -157,6 +202,7 @@ def run_representation_analysis(
     max_length: int = 256,
     device: Optional[str] = None,
 ) -> str:
+    """Run the representation-shift analysis and persist a CSV summary."""
     df = compute_representation_shift(
         data_paths=data_paths,
         model_name_or_path=model_name_or_path,

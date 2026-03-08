@@ -1,14 +1,21 @@
+"""Task-level evaluation metrics for SwitchMixBench."""
+
 import re
 from collections import Counter
 
+
 def normalize(s: str) -> str:
+    """Lowercase, strip and remove punctuation from a string."""
     s = s.lower().strip()
     s = re.sub(r"\s+", " ", s)
     s = re.sub(r"[^\w\s]", "", s)
     return s
 
+
 def tokenize(s: str):
+    """Whitespace tokenisation after normalisation."""
     return normalize(s).split()
+
 
 def accuracy(preds, labels):
     correct = 0
@@ -18,7 +25,9 @@ def accuracy(preds, labels):
     return correct / max(1, len(labels))
 
 def exact_match(preds, labels):
+    """Accuracy re-exported under an explicit name for QA."""
     return accuracy(preds, labels)
+
 
 def f1_score(pred: str, gold: str) -> float:
     pred_tokens = tokenize(pred)

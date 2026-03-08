@@ -1,5 +1,12 @@
 from __future__ import annotations
 
+"""Composed perturbations with explicit metadata for SwitchMixBench.
+
+This module wraps the simple code-switching and noise injectors used in the
+original prototype and enriches them with structured metadata that can be
+logged and analysed. It is used by the scalable dataset builder.
+"""
+
 import random
 from typing import Any, Dict, Tuple
 

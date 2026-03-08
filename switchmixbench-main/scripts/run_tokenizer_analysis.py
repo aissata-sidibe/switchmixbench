@@ -1,5 +1,12 @@
 from __future__ import annotations
 
+"""CLI entrypoint for tokenizer-level robustness analysis.
+
+This script reads a YAML config describing input dataset paths and the
+tokeniser to use, then calls `switchmixbench.analysis.tokenizer_analysis`
+and writes a CSV table under `results/tables/`.
+"""
+
 import sys
 import argparse
 from pathlib import Path

@@ -1,3 +1,5 @@
+"""Aggregate robustness summary from per-example CSV predictions."""
+
 import os
 import pandas as pd
 

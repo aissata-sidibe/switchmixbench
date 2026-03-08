@@ -1,5 +1,13 @@
 from __future__ import annotations
 
+"""Efficiency impact analysis for SwitchMixBench.
+
+This module estimates how much the perturbations used in SwitchMixBench affect
+inference efficiency for encoder models. It measures sequence-length
+inflation, latency differences, and a simple activation memory proxy between
+clean and perturbed variants of the same underlying example.
+"""
+
 import time
 from collections import defaultdict
 from pathlib import Path
@@ -21,6 +29,7 @@ def _lazy_torch_transformers():
 
 
 def _pair_rows(rows: List[Dict[str, Any]]) -> Dict[str, Dict[str, Dict[str, Any]]]:
+    """Group dataset rows into clean / perturbed pairs."""
     pairs: Dict[str, Dict[str, Dict[str, Any]]] = defaultdict(dict)
     for r in rows:
         pid = r.get("pair_id")
@@ -34,6 +43,7 @@ def _pair_rows(rows: List[Dict[str, Any]]) -> Dict[str, Dict[str, Dict[str, Any]
 
 
 def _hidden_size_from_config(cfg) -> int:
+    """Infer hidden size from a model config object."""
     for key in ["hidden_size", "d_model", "dim"]:
         if hasattr(cfg, key):
             v = getattr(cfg, key)
@@ -43,7 +53,7 @@ def _hidden_size_from_config(cfg) -> int:
 
 
 def _estimate_activation_bytes(seq_len: int, hidden_size: int, dtype_bytes: int = 4) -> int:
-    # Simple, transparent estimate requested: O(seq_len * hidden_size)
+    """Rough activation memory proxy in bytes for one sequence."""
     return int(seq_len * hidden_size * dtype_bytes)
 
 
@@ -56,6 +66,7 @@ def run_efficiency_analysis(
     device: Optional[str] = None,
     include_tokenization_time: bool = False,
 ) -> str:
+    """Measure efficiency differences between clean and perturbed variants."""
     torch, AutoTokenizer, AutoModel = _lazy_torch_transformers()
 
     tok = AutoTokenizer.from_pretrained(model_name_or_path, use_fast=True)
@@ -75,7 +86,9 @@ def run_efficiency_analysis(
         if not isinstance(rows, list):
             raise ValueError(f"Expected list rows in {path}")
         pairs = _pair_rows(rows)
-        pair_ids = list(pairs.keys())[: max_pairs]
+        pair_ids = list(pairs.keys())
+        if max_pairs is not None and max_pairs >= 0:
+            pair_ids = pair_ids[: max_pairs]
 
         clean_lens = []
         pert_lens = []

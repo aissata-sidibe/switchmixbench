@@ -4,12 +4,20 @@ from pathlib import Path
 # Allow running as: `python scripts/prepare_data.py` without installing the package.
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+"""Legacy v0.1 prototype dataset builder.
+
+This script constructs a very small seed dataset and is kept for backwards
+compatibility and quick sanity checks. New experiments should prefer the
+config-driven `scripts/build_dataset.py` pipeline.
+"""
+
 import os
 import argparse
 from switchmixbench.utils.io import write_json
 from switchmixbench.generate.build_pairs import build_switchmix_pair
 from switchmixbench.tasks.nli import format_nli_prompt
 from switchmixbench.tasks.qa import format_qa_prompt
+
 
 def main():
     p = argparse.ArgumentParser()

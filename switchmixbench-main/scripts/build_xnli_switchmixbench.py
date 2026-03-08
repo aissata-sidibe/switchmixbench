@@ -1,3 +1,5 @@
+"""Legacy script to build a simple NLI SwitchMix dataset from XNLI FR."""
+
 import os
 import json
 import random
@@ -20,6 +22,7 @@ EN_INSERTIONS = [
     "for real",
     "actually",
 ]
+
 
 def make_clean_prompt(premise: str, hypothesis: str) -> str:
     return (

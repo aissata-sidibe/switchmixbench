@@ -1,5 +1,16 @@
 from __future__ import annotations
 
+"""Tokenizer-level robustness analysis for SwitchMixBench.
+
+This module computes summary statistics comparing how a tokenizer behaves
+on clean versus perturbed (code-switched / noisy) inputs. It is used to
+quantify sequence-length inflation, fragmentation, and token distribution
+shift between paired examples.
+
+Inputs are one or more dataset files (JSON or JSONL) following the benchmark
+schema; outputs are written as a CSV table under ``results/tables/``.
+"""
+
 import math
 from collections import Counter, defaultdict
 from dataclasses import dataclass
@@ -23,9 +34,20 @@ def _lazy_tokenizer(model_name_or_path: str):
 
 
 def _js_divergence(p: np.ndarray, q: np.ndarray, eps: float = 1e-12) -> float:
-    """
-    Jensen–Shannon divergence in bits.
-    p, q must be non-negative and sum to 1.
+    """Compute Jensen–Shannon divergence (in bits) between two distributions.
+
+    Parameters
+    ----------
+    p, q:
+        Probability vectors with non‑negative entries. They do not need to
+        be normalised; the function takes care of that.
+    eps:
+        Small constant used to clamp probabilities away from zero.
+
+    Returns
+    -------
+    float
+        Symmetric divergence value in the range ``[0, 1]`` for typical inputs.
     """
     p = np.clip(p, eps, 1.0)
     q = np.clip(q, eps, 1.0)
@@ -51,11 +73,16 @@ def _word_count(s: str) -> int:
 
 
 def _pair_rows(rows: List[Dict[str, Any]]) -> Dict[str, Dict[str, Dict[str, Any]]]:
-    """
-    Returns: pair_id -> variant -> row
-    Accepts variant names:
-      clean, perturbed (preferred)
-      clean, switchmix (legacy)
+    """Group dataset rows into clean / perturbed pairs.
+
+    The function is tolerant to both the new variant name (``\"perturbed\"``)
+    and the legacy one (``\"switchmix\"``), which makes it safe to run on
+    different versions of the benchmark.
+
+    Returns
+    -------
+    dict
+        Mapping ``pair_id -> variant -> row``.
     """
     pairs: Dict[str, Dict[str, Dict[str, Any]]] = defaultdict(dict)
     for r in rows:
@@ -74,6 +101,24 @@ def compute_tokenizer_stats(
     tokenizer_name_or_path: str,
     max_pairs: Optional[int] = None,
 ) -> pd.DataFrame:
+    """Compute tokenizer statistics for one or more dataset shards.
+
+    Parameters
+    ----------
+    data_paths:
+        Iterable of JSON / JSONL files containing SwitchMixBench examples.
+    tokenizer_name_or_path:
+        Name or path understood by ``transformers.AutoTokenizer``.
+    max_pairs:
+        Optional cap on the number of clean/perturbed pairs to analyse per
+        file, useful for smoke tests.
+
+    Returns
+    -------
+    pandas.DataFrame
+        One row per (task, split) with aggregated metrics such as average
+        token counts, fragmentation, and token-distribution divergence.
+    """
     tok = _lazy_tokenizer(tokenizer_name_or_path)
 
     records: List[Dict[str, Any]] = []
@@ -85,7 +130,7 @@ def compute_tokenizer_stats(
 
         pairs = _pair_rows(rows)
         pair_ids = list(pairs.keys())
-        if max_pairs is not None:
+        if max_pairs is not None and max_pairs >= 0:
             pair_ids = pair_ids[: max_pairs]
 
         # Aggregation buckets by (task, split)
@@ -184,6 +229,20 @@ def run_tokenizer_analysis(
     out_csv: str = "results/tables/tokenizer_stats.csv",
     max_pairs: Optional[int] = None,
 ) -> str:
+    """Convenience wrapper that runs the analysis and writes a CSV file.
+
+    Parameters
+    ----------
+    data_paths, tokenizer_name_or_path, max_pairs:
+        Forwarded to :func:`compute_tokenizer_stats`.
+    out_csv:
+        Output path for the summary table.
+
+    Returns
+    -------
+    str
+        Path to the written CSV file.
+    """
     df = compute_tokenizer_stats(
         data_paths=data_paths,
         tokenizer_name_or_path=tokenizer_name_or_path,

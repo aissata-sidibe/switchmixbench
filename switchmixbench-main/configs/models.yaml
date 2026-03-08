@@ -1,0 +1,16 @@
+encoder:
+  small:
+    - distilbert-base-multilingual-cased
+  full:
+    - distilbert-base-multilingual-cased
+    - bert-base-multilingual-cased
+    - xlm-roberta-base
+    - xlm-roberta-large
+
+seq2seq:
+  small:
+    - google/flan-t5-small
+  full:
+    - google/flan-t5-small
+    - google/flan-t5-base
+

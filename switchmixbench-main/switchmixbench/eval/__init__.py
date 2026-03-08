@@ -1,2 +1,2 @@
-"""Evaluation utilities and CLI entrypoints."""
+"""Evaluation utilities and CLI entrypoints for SwitchMixBench."""
 
